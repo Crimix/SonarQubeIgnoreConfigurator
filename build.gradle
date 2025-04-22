@@ -1,0 +1,65 @@
+plugins {
+    id 'java'
+    id 'java-gradle-plugin'
+    id 'net.saliman.properties' version '1.5.2'
+    id 'org.sonarqube' version '6.1.0.5360'
+
+    // Publishing publicly
+    id "com.gradle.plugin-publish" version "0.20.0"
+
+    // Publishing to Artifactory
+    id 'maven-publish'
+}
+
+group 'io.github.crimix'
+version '0.1'
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'io.github.classgraph:classgraph:4.8.172'
+    testImplementation(platform('org.junit:junit-bom:5.8.2'))
+    testImplementation('org.junit.jupiter:junit-jupiter:5.9.0')
+    testImplementation('org.junit.jupiter:junit-jupiter-params:5.9.0')
+    testImplementation("org.assertj:assertj-core:3.23.1")
+}
+
+test {
+    useJUnitPlatform()
+    testLogging {
+        events "passed", "skipped", "failed"
+    }
+}
+
+gradlePlugin {
+    plugins {
+        sonarQubeIgnoreConfiguratorPlugin {
+            id = 'io.github.crimix.sonarqube-ignore-configurator'
+            implementationClass = 'io.github.crimix.sonarqubeignoreconfigurator.SonarQubeIgnoreConfigurator'
+        }
+    }
+}
+
+pluginBundle {
+    website = 'https://github.com/Crimix/SonarQubeIgnoreConfigurator'
+    vcsUrl = 'https://github.com/Crimix/SonarQubeIgnoreConfigurator'
+
+    plugins {
+        changedProjectsPlugin {
+            // id is captured from java-gradle-plugin configuration
+            displayName = 'SonarQube Ignore Configurator Plugin'
+            description = 'A Gradle plugin to configure SonarQube code coverage and duplicated code exclusions from annotations'
+            tags = ['SonarQube', 'code coverage exclusion', 'duplicated code exclusion', 'annotations']
+        }
+    }
+}
+
+publishToMavenLocal.dependsOn(validatePlugins)
+publishPlugins.dependsOn(validatePlugins)
