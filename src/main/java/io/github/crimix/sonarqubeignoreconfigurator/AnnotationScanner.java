@@ -5,6 +5,7 @@ import io.github.classgraph.ClassInfo;
 import io.github.classgraph.ScanResult;
 import org.gradle.api.Project;
 
+import javax.annotation.Nonnull;
 import java.io.File;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -60,10 +61,19 @@ public class AnnotationScanner {
         String extension = lang.equals("kotlin") ? ".kt" : ".java";
         String sourcePath = "src/" + scope + "/" + lang + "/" + relativeClassPath + extension;
 
-        if (!project.equals(project.getRootProject())) {
-            sourcePath = project.getProjectDir().getName() + "/" + sourcePath;
+        return addProjectPathIfNeeded(project, sourcePath);
+    }
+
+    private String addProjectPathIfNeeded(@Nonnull Project project, String sourcePath) {
+        Project projectToEvaluate = project;
+        StringBuilder res = new StringBuilder();
+        while (projectToEvaluate != null && !projectToEvaluate.equals(project.getRootProject())) {
+            res.insert(0, projectToEvaluate.getProjectDir().getName() + "/");
+            projectToEvaluate = projectToEvaluate.getParent();
         }
 
-        return sourcePath;
+        res.append(sourcePath);
+
+        return res.toString();
     }
 }

@@ -23,7 +23,7 @@ public class SonarPropertyUpdater {
         String mergedValue = String.join(",", merged);
 
         setSonarProperty(rootProject, sonarRule.getSonarProperty(), mergedValue);
-        rootProject.getLogger().lifecycle("[SonarPropertyUpdater] Updated property {} with {}", sonarRule.getSonarProperty(), mergedValue);
+        rootProject.getLogger().info("[SonarPropertyUpdater] Updated property {} with {}", sonarRule.getSonarProperty(), mergedValue);
     }
 
     private List<String> resolvePropertyList(Project project, SonarRule rule) {
@@ -64,7 +64,6 @@ public class SonarPropertyUpdater {
         if (sonarExtension == null) return new ArrayList<>();
 
         try {
-            // Get the private 'propertiesActions' field
             Field actionsField = sonarExtension.getClass().getSuperclass().getDeclaredField("propertiesActions");
             actionsField.setAccessible(true);
 
@@ -72,7 +71,6 @@ public class SonarPropertyUpdater {
 
             Map<String, Object> properties = new HashMap<>();
 
-            // Create a new SonarProperties instance via reflection
             ClassLoader loader = sonarExtension.getClass().getClassLoader();
             Class<?> sonarPropsClass = loader.loadClass("org.sonarqube.gradle.SonarProperties");
             Constructor<?> constructor = sonarPropsClass.getConstructor(Map.class);

@@ -32,7 +32,7 @@ public enum SonarRule {
     @Override
     public String toString() {
         return new StringJoiner(", ", SonarRule.class.getSimpleName() + "[", "]")
-                .add("ruleName='" + ruleName + "'")
+                .add(ruleName)
                 .toString();
     }
 }

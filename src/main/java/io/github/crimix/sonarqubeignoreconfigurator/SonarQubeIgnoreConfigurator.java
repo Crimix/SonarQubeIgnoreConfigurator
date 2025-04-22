@@ -62,7 +62,7 @@ public class SonarQubeIgnoreConfigurator implements Plugin<Project> {
 
             if (!matched.isEmpty()) {
                 updater.updateProperties(rootProject, rule, matched);
-                project.getLogger().lifecycle("[{}:{}] Excluded {} files", project.getName(), rule, matched.size());
+                project.getLogger().lifecycle("[SonarConfigurator] [{}:{}] Excluded {} files", project.getName(), rule, matched.size());
             }
         }
     }
