@@ -52,7 +52,7 @@ pluginBundle {
     vcsUrl = 'https://github.com/Crimix/SonarQubeIgnoreConfigurator'
 
     plugins {
-        changedProjectsPlugin {
+        sonarQubeIgnoreConfiguratorPlugin {
             // id is captured from java-gradle-plugin configuration
             displayName = 'SonarQube Ignore Configurator Plugin'
             description = 'A Gradle plugin to configure SonarQube code coverage and duplicated code exclusions from annotations'
