@@ -9,10 +9,12 @@ plugins {
 
     // Publishing to Artifactory
     id 'maven-publish'
+
+    //id "io.github.crimix.sonarqube-ignore-configurator" version "0.3-SNAPSHOT"
 }
 
 group 'io.github.crimix'
-version '0.2'
+version '0.3'
 
 java {
     sourceCompatibility = JavaVersion.VERSION_11

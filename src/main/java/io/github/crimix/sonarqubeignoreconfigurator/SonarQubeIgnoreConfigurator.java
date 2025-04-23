@@ -22,21 +22,37 @@ public class SonarQubeIgnoreConfigurator implements Plugin<Project> {
     }
 
     private void configureProjectTask(Project rootProject) {
-        rootProject.getAllprojects().forEach(project -> {
-            // Register preparation task
-            Task prepTask = project.getTasks().create("prepareSonarExclusions", task -> {
-                task.setGroup("verification");
-                task.setDescription("Scans annotations and sets Sonar exclusions");
-                task.doLast(t -> processProject(rootProject, project));
-            });
-
-            // Hook into sonarqube task if available
-            project.getTasks().matching(t -> t.getName().equals("sonarqube")).configureEach(task -> task.dependsOn(prepTask));
-            project.getTasks().matching(t -> t.getName().equals("sonar")).configureEach(task -> task.dependsOn(prepTask));
+        // Register preparation task
+        Task prepTask = rootProject.getTasks().create("prepareSonarExclusions", task -> {
+            task.setGroup("verification");
+            task.setDescription("Scans annotations and sets Sonar exclusions");
+            task.doLast(t -> processProjects(rootProject));
         });
+
+        // Make sure that the project has been built first
+        rootProject.getTasks().matching(t -> t.getName().equals("assemble")).configureEach(prepTask::dependsOn);
+
+        // Hook into sonarqube task if available
+        rootProject.getTasks().matching(t -> t.getName().equals("sonarqube")).configureEach(task -> task.dependsOn(prepTask));
+        rootProject.getTasks().matching(t -> t.getName().equals("sonar")).configureEach(task -> task.dependsOn(prepTask));
     }
 
-    private void processProject(Project rootProject, Project project) {
+    private void processProjects(Project rootProject) {
+        for (SonarRule rule : SonarRule.values()) {
+            List<String> matched = new ArrayList<>();
+            for (Project project : rootProject.getAllprojects()) {
+                matched.addAll(findExcludedFiles(project, rule));
+            }
+
+            if (!matched.isEmpty()) {
+                updater.updateProperties(rootProject, rule, matched);
+                rootProject.getLogger().lifecycle("[SonarConfigurator] [{}] Excluded {} files", rule, matched.size());
+            }
+        }
+    }
+
+    private List<String> findExcludedFiles(Project project, SonarRule rule) {
+        project.getLogger().info("[SonarConfigurator] [{}:{}] Starting to find exclusions", project.getName(), rule);
         List<File> dirs = new ArrayList<>();
         File classesDir = new File(project.getBuildDir(), "classes/java/main");
         if (classesDir.exists()) {
@@ -48,23 +64,23 @@ public class SonarQubeIgnoreConfigurator implements Plugin<Project> {
             dirs.add(testsDir);
         }
 
-        if (dirs.isEmpty()) return;
+        if (dirs.isEmpty()) return new ArrayList<>();
 
-        for (SonarRule rule : SonarRule.values()) {
-            List<String> annotations = getAnnotationsFor(project, rule);
-            if (annotations.isEmpty()) continue;
+        project.getLogger().info("[SonarConfigurator] [{}:{}] Founds dirs to check {}", project.getName(), rule, dirs.stream().map(File::getName).collect(Collectors.joining(", ")));
 
+        List<String> annotations = getAnnotationsFor(project, rule);
+        if (annotations.isEmpty()) return new ArrayList<>();
 
-            List<String> matched = new ArrayList<>();
-            for (File dir : dirs) {
-                matched.addAll(scanner.scan(project, dir, annotations));
-            }
-
-            if (!matched.isEmpty()) {
-                updater.updateProperties(rootProject, rule, matched);
-                project.getLogger().lifecycle("[SonarConfigurator] [{}:{}] Excluded {} files", project.getName(), rule, matched.size());
-            }
+        List<String> matched = new ArrayList<>();
+        for (File dir : dirs) {
+            matched.addAll(scanner.scan(project, dir, annotations));
         }
+
+        if (!matched.isEmpty()) {
+            project.getLogger().lifecycle("[SonarConfigurator] [{}:{}] Found {} files to exclude", project.getName(), rule, matched.size());
+        }
+
+        return matched;
     }
 
     private List<String> getAnnotationsFor(Project project, SonarRule sonarRule) {
