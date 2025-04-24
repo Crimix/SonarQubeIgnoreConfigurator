@@ -22,7 +22,7 @@ public class SonarPropertyUpdater {
         List<String> merged = mergeAndDeduplicate(existing, matched);
         String mergedValue = String.join(",", merged);
 
-        setSonarProperty(rootProject, sonarRule.getSonarProperty(), mergedValue);
+        System.setProperty(sonarRule.getSonarProperty(), mergedValue);
         rootProject.getLogger().info("[SonarPropertyUpdater] Updated property {} with {}", sonarRule.getSonarProperty(), mergedValue);
     }
 
@@ -53,10 +53,6 @@ public class SonarPropertyUpdater {
         merged.addAll(existing);
         merged.addAll(incoming);
         return new ArrayList<>(merged);
-    }
-
-    private void setSonarProperty(Project project, String key, String value) {
-        project.getExtensions().getExtraProperties().set(key, value);
     }
 
     private List<String> getSonarExtensionProperty(Project project, SonarRule sonarRule) {
