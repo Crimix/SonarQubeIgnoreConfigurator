@@ -8,6 +8,16 @@ plugins {
     id 'io.github.crimix.sonarqube-ignore-configurator' version 'VERSION'
 }
 ```
+Then it can be configured using the following three options in `gradle.properties`
+
+| **Property**                         | **Description**                                       |
+|--------------------------------------|-------------------------------------------------------|
+| sonar.ignore.coverage.annotations    | Autoconfigures the sonar.coverage.exclusions property |
+| sonar.ignore.duplication.annotations | Autoconfigures the sonar.cpd.exclusions property      |
+| sonar.ignore.issue.annotations       | Autoconfigures the sonar.issue.exclusions property    |
+
+Each property takes a fully qualified annotation class (com.mypackage.MyAnnotation)
+Then it takes the default configured Sonar property and adds the dynamic parts to it from the classes found with the annotations
 
 ## Local Development
 To develop and test locally with your own projects there are a few changes needed to be made.
